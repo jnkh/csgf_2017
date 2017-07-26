@@ -13,6 +13,17 @@ float floatMod(float a, float b)
     return (a - b * floor(a / b));
 }
 
+float dumbRound(float x){
+
+  float low = floor(x);
+  if ((x - low) > 0.5) {
+    return ceil(x);
+  } else {
+    return low;
+  }
+
+}
+
 /*takes an array of row major, contiguous rbg values as unsigned char (0-255) and writes them
  * to a ppm file*/
 void write_to_p6(char* filename,int dim_x, int dim_y, unsigned char data []) {
@@ -59,9 +70,9 @@ rgb_color hsv_to_rgb(float h, float s, float v) {
 	r += m;
 	g += m;
 	b += m;
-	rgb.r = (unsigned char) round(255*r);
-	rgb.g = (unsigned char) round(255*g);
-	rgb.b = (unsigned char) round(255*b);
+	rgb.r = (unsigned char) dumbRound(255*r);
+	rgb.g = (unsigned char) dumbRound(255*g);
+	rgb.b = (unsigned char) dumbRound(255*b);
 	return rgb;
 }
 
@@ -72,7 +83,7 @@ rgb_color get_color(float distance,int iter,int iter_max, float pixel_size, floa
 	if (iter >= iter_max) {
 		ret.r = 255; ret.g = 255; ret.b = 255	;
 		return ret;
-	}
+	} 
 	if (distance < 0.5*pixel_size) {
 		val = pow(distance/(0.5*pixel_size),1.0/3);
 	}	else {
@@ -85,40 +96,50 @@ rgb_color get_color(float distance,int iter,int iter_max, float pixel_size, floa
 	return hsv_to_rgb(hue,sat,val);
 }
 
-float abs_complex(float x,float y) {return sqrt(x*x + y*y);}
 
 float mult_complex_re(float x1,float y1,float x2, float y2) { return x1*x2 - y1*y2;}
 float mult_complex_im(float x1,float y1,float x2, float y2) { return x1*y2 + y1*x2;}
 
 float square_complex_re(float x,float y) { return x*x - y*y;}
 float square_complex_im(float x,float y) { return 2*x*y;}
+float abs_complex(float x,float y) {return pow(x*x + y*y,0.5);}
 
 
 rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 
   int iter = 0;
   int iter_max = 10000;
-  float radius_max = 1 << 18;
+  float radius_max = 1.0* ( 1 << 18);
 
   float radius = 0.0;
   float x = 0.0;
+  float x_tmp = 0.0;
+  float dx_tmp = 0.0;
   float y = 0.0;
+	//complex<float> z (0.0,0.0);
+	//complex<float> c  (x0,y0);//x0 + std::complex::complex_literals::i*y0;
   float dx = 0.0;
   float dy = 0.0;
 
   
   while (radius < radius_max && iter < iter_max) {
-
+		dx_tmp = dx;
 		dx = 2*mult_complex_re(x,y,dx,dy) + 1;
-		dy = 2*mult_complex_im(x,y,dx,dy);
+		dy = 2*mult_complex_im(x,y,dx_tmp,dy) + 1;
+		//z = z*z + c;
+		//radius = abs(z);
 
+		x_tmp = x;
 		x = square_complex_re(x,y) + x0;
-		y = square_complex_im(x,y) + y0;
+		y = square_complex_im(x_tmp,y) + y0;
 
 
 		radius = abs_complex(x,y);
 	  iter++;
   }
+	//rgb_color ret;
+	//if (iter < iter_max) {ret.r = 255;ret.g = 255;ret.b = 255;}
+	//else {ret.r = 0;ret.g = 0;ret.b = 0;}
 	
 	float distance = 2*log(radius)*radius/abs_complex(dx,dy);
 	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
@@ -127,13 +148,12 @@ rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 
 int main () {
 
-  int pixel_count_x = 40;
+  int pixel_count_x = 1000;
 
   float center_x = -0.75;
   float center_y = 0.00;
   float length_x = 2.75;
   float length_y = 2.0;
-
 
   float pixel_size = length_x / pixel_count_x;
 	int pixel_count_y = floor(length_y/pixel_size);
@@ -146,13 +166,13 @@ int main () {
   rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y );
 
   for (int pixel_y=0; pixel_y<pixel_count_y; pixel_y++) {
-		#pragma acc parallel
+    #pragma acc parallel
     for (int pixel_x=0; pixel_x<pixel_count_x; pixel_x++) {
 
       float x = minx + pixel_x*pixel_size;
       float y = maxy - pixel_y*pixel_size;
 
-			//float x = minx + i*pixel_size;
+      //float x = minx + i*pixel_size;
       //float y = maxy - j*pixel_size;
 
       pixels[pixel_y*pixel_count_x+pixel_x] = Mandelbrot(x,y,pixel_size);
