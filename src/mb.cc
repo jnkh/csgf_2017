@@ -5,9 +5,29 @@
 #include <string>
 #include <math.h>
 #include <cmath>
+<<<<<<< HEAD
 #include <complex>
 #include <assert.h>
+=======
+>>>>>>> f8953d38c881a56cb52e1a57202901e8b2ad7a3c
 using namespace std;
+
+
+float floatMod(float a, float b)
+{
+    return (a - b * floor(a / b));
+}
+
+float dumbRound(float x){
+
+  float low = floor(x);
+  if ((x - low) > 0.5) {
+    return ceil(x);
+  } else {
+    return low;
+  }
+
+}
 
 /*takes an array of row major, contiguous rbg values as unsigned char (0-255) and writes them
  * to a ppm file*/
@@ -40,10 +60,17 @@ struct rgb_color {
 rgb_color hsv_to_rgb(double h, double s, double v) {
 	h = 360*h;
 	
+<<<<<<< HEAD
 	double c = v*s;
 	double hp = h/60;
 	double x = c*(1 - fabs(fmod(hp,2.0)-1));
 	double r,g,b;
+=======
+	float c = v*s;
+	float hp = h/60;
+	float x = c*(1 - abs(floatMod(hp,2.0)-1));
+	float r,g,b;
+>>>>>>> f8953d38c881a56cb52e1a57202901e8b2ad7a3c
 	rgb_color rgb;
 	if (0 <= hp && hp < 1) {r = c; g = x; b = 0;}
 	if (1 <= hp && hp < 2) {r = x; g = c; b = 0;}
@@ -55,9 +82,9 @@ rgb_color hsv_to_rgb(double h, double s, double v) {
 	r += m;
 	g += m;
 	b += m;
-	rgb.r = (unsigned char) round(255*r);
-	rgb.g = (unsigned char) round(255*g);
-	rgb.b = (unsigned char) round(255*b);
+	rgb.r = (unsigned char) dumbRound(255*r);
+	rgb.g = (unsigned char) dumbRound(255*g);
+	rgb.b = (unsigned char) dumbRound(255*b);
 	return rgb;
 }
 
@@ -122,12 +149,17 @@ rgb_color Mandelbrot(double x0, double y0,double pixel_size) {
 		radius = abs_complex(x,y);
 	  iter++;
   }
+<<<<<<< HEAD
 	//rgb_color ret;
 	//if (iter < iter_max) {ret.r = 255;ret.g = 255;ret.b = 255;}
 	//else {ret.r = 0;ret.g = 0;ret.b = 0;}
 	
 	double distance = 2*log(radius)*radius/abs_complex(dx,dy);
 	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
+=======
+  float distance = 2*log(radius)*radius/abs_complex(dx,dy);
+  return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
+>>>>>>> f8953d38c881a56cb52e1a57202901e8b2ad7a3c
 }
 
 void downsample_pixels(rgb_color* pixels_hr,rgb_color* pixels_lr,int fac,int pixel_count_x,int pixel_count_y) {
@@ -222,6 +254,7 @@ int main () {
 	free(out_pixels);
   //unsigned char test_array [] = {10, 10, 10, 20, 20, 20};
   //write_to_p6((char *) "test.ppm",2,1,test_array);
+
   return 0;
 
 }
