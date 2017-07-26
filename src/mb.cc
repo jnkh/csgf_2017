@@ -102,25 +102,26 @@ rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 
   
   while (radius < radius_max && iter < iter_max) {
-		x = square_complex_re(x,y) + x0;
-		y = square_complex_im(x,y) + y0;
 
 		dx = 2*mult_complex_re(x,y,dx,dy) + 1;
 		dy = 2*mult_complex_im(x,y,dx,dy);
+
+		x = square_complex_re(x,y) + x0;
+		y = square_complex_im(x,y) + y0;
+
 
 		radius = abs_complex(x,y);
 	  iter++;
   }
 	
-	float abs_z = abs_complex(x,y);
-	float distance = 2*log(abs_z)*abs_z/abs_complex(dx,dy);
+	float distance = 2*log(radius)*radius/abs_complex(dx,dy);
 	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
 }
 
 
 int main () {
 
-  int pixel_count_x = 400;
+  int pixel_count_x = 40;
 
   float center_x = -0.75;
   float center_y = 0.00;
@@ -139,6 +140,7 @@ int main () {
   rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y );
 
   for (int pixel_y=0; pixel_y<pixel_count_y; pixel_y++) {
+		//#pragma acc parallel
     for (int pixel_x=0; pixel_x<pixel_count_x; pixel_x++) {
 
       float x = minx + pixel_x*pixel_size;
