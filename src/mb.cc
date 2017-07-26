@@ -7,6 +7,12 @@
 #include <cmath>
 using namespace std;
 
+
+float floatMod(float a, float b)
+{
+    return (a - b * floor(a / b));
+}
+
 /*takes an array of row major, contiguous rbg values as unsigned char (0-255) and writes them
  * to a ppm file*/
 void write_to_p6(char* filename,int dim_x, int dim_y, unsigned char data []) {
@@ -40,7 +46,7 @@ rgb_color hsv_to_rgb(float h, float s, float v) {
 	
 	float c = v*s;
 	float hp = h/60;
-	float x = c*(1 - abs(fmod(hp,2.0)-1));
+	float x = c*(1 - abs(floatMod(hp,2.0)-1));
 	float r,g,b;
 	rgb_color rgb;
 	if (0 <= hp && hp < 1) {r = c; g = x; b = 0;}
@@ -140,7 +146,7 @@ int main () {
   rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y );
 
   for (int pixel_y=0; pixel_y<pixel_count_y; pixel_y++) {
-		//#pragma acc parallel
+		#pragma acc parallel
     for (int pixel_x=0; pixel_x<pixel_count_x; pixel_x++) {
 
       float x = minx + pixel_x*pixel_size;
