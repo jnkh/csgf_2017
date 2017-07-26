@@ -137,12 +137,8 @@ rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 		radius = abs_complex(x,y);
 	  iter++;
   }
-	//rgb_color ret;
-	//if (iter < iter_max) {ret.r = 255;ret.g = 255;ret.b = 255;}
-	//else {ret.r = 0;ret.g = 0;ret.b = 0;}
-	
-	float distance = 2*log(radius)*radius/abs_complex(dx,dy);
-	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
+  float distance = 2*log(radius)*radius/abs_complex(dx,dy);
+  return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
 }
 
 
@@ -163,26 +159,27 @@ int main () {
   float maxy = center_y + length_y/2.0; 
   
 
-  rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y );
+  int buffer_size = pixel_count_x*pixel_count_y;
+  rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*buffer_size );
 
+  #pragma acc data copyout(pixels[0:buffer_size])
+  #pragma acc parallel 
+  {
+  #pragma acc loop independent
   for (int pixel_y=0; pixel_y<pixel_count_y; pixel_y++) {
-    #pragma acc parallel
+    #pragma acc loop independent
     for (int pixel_x=0; pixel_x<pixel_count_x; pixel_x++) {
 
       float x = minx + pixel_x*pixel_size;
       float y = maxy - pixel_y*pixel_size;
 
-      //float x = minx + i*pixel_size;
-      //float y = maxy - j*pixel_size;
-
       pixels[pixel_y*pixel_count_x+pixel_x] = Mandelbrot(x,y,pixel_size);
     }
   }	
+  }
 
   write_to_p6((char *) "out.ppm",pixel_count_x,pixel_count_y, (unsigned char *) pixels);
 	free(pixels);
-  //unsigned char test_array [] = {10, 10, 10, 20, 20, 20};
-  //write_to_p6((char *) "test.ppm",2,1,test_array);
   return 0;
 
 }
