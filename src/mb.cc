@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <math.h>
 using namespace std;
 
 /*takes an array of row major, contiguous rbg values as unsigned char (0-255) and writes them
@@ -20,33 +21,44 @@ void write_to_p6(char* filename,int dim_x, int dim_y, unsigned char data []) {
 	f.write((char *) data, length);
 }
 
+float abs_complex(float x,float y) {return sqrt(x*x + y*y);}
+
+float mult_complex_re(float x1,float y1,float x2, float y2) { return x1*x2 - y1*y2;}
+float mult_complex_im(float x1,float y1,float x2, float y2) { return x1*y2 + y1*x2;}
+
+float square_complex_re(float x,float y) { return x*x - y*y;}
+float square_complex_im(float x,float y) { return 2*x*y;}
+
 
 int Mandelbrot(float x0, float y0) {
 
   int iter = 0;
-  int iter_max = 1000;
-  float radius_max = 2.0;
-
-  float x = 0.0;
-  float y = 0.0;
+  int iter_max = 10000;
+  float radius_max = 1 << 18;
 
   float radius = 0.0;
+  float x = 0.0;
+  float y = 0.0;
+  float dx = 0.0;
+  float dy = 0.0;
+
   
   while (radius < radius_max && iter < iter_max) {
+		x = square_complex_re(x,y) + x0;
+		y = square_complex_im(x,y) + y0;
 
-    float xtemp = x*x - y*y + x0;
-    y = 2*x*y + y0;
-    x = xtemp;
-    radius = x*x + y*y;
-    iter++;
+		dx = 2*mult_complex_re(x,y,dx,dy) + 1;
+		dy = 2*mult_complex_im(x,y,dx,dy);
 
+		radius = abs_complex(x,y);
+	  iter++;
   }
 
+  cout << x0 << " " << y0 << endl;
   cout << "final iter " << iter << endl; 
-
   return (float)iter;
-
 }
+
 
 int main () {
 
