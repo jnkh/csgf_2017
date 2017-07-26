@@ -115,10 +115,6 @@ rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 	float abs_z = abs_complex(x,y);
 	float distance = 2*log(abs_z)*abs_z/abs_complex(dx,dy);
 	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
-
-  //cout << x0 << " " << y0 << endl;
-  //cout << "final iter " << iter << endl; 
-  //return (float)iter;
 }
 
 
@@ -152,7 +148,6 @@ int main () {
       //float y = maxy - j*pixel_size;
 
       pixels[pixel_y*pixel_count_x+pixel_x] = Mandelbrot(x,y,pixel_size);
-
     }
   }	
 
