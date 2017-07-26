@@ -54,15 +54,16 @@ int Mandelbrot(float x0, float y0) {
 	  iter++;
   }
 
-  cout << x0 << " " << y0 << endl;
-  cout << "final iter " << iter << endl; 
+  //cout << x0 << " " << y0 << endl;
+  //cout << "final iter " << iter << endl; 
   return (float)iter;
 }
 
 
 int main () {
 
-  int pixel_count_x = 8192;
+  int pixel_count_x = 100;
+  //int pixel_count_x = 8192;
 
   float center_x = -0.75;
   float center_y = 0.00;
@@ -70,7 +71,10 @@ int main () {
   float length_y = 2.0;
 
   float pixel_size = length_x / pixel_count_x;
-  float pixel_count_y = length_y / pixel_size;
+
+  int pixel_count_y = floor(length_y/pixel_size);
+  length_y = pixel_count_y*pixel_size;
+
 
   float minx = center_x - length_x/2.0;
   float maxy = center_y + length_y/2.0; 
