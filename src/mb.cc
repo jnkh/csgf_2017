@@ -56,14 +56,21 @@ int Mandelbrot(float x0, float y0) {
 
   //cout << x0 << " " << y0 << endl;
   //cout << "final iter " << iter << endl; 
-  return (float)iter;
+  //return (float)iter;
+
+  if (iter < iter_max) 
+    return 0;
+  else 
+    return 1;
+
 }
 
 
 int main () {
 
-  int pixel_count_x = 100;
-  //int pixel_count_x = 8192;
+  //int pixel_count_x = 100;
+  //int pixel_count_x = 1024;
+  int pixel_count_x = 4096;
 
   float center_x = -0.75;
   float center_y = 0.00;
@@ -81,6 +88,7 @@ int main () {
   
 
   float *pixels = (float *) malloc( sizeof(float)*pixel_count_x*pixel_count_y );
+  unsigned char *pixels_rgb = (unsigned char*) malloc( 3*sizeof(unsigned char)*pixel_count_x*pixel_count_y );
 
   for (int i=0; i<pixel_count_x; i++) {
     for (int j=0; j<pixel_count_y; j++) {
@@ -88,14 +96,28 @@ int main () {
       float x = minx + i*pixel_size;
       float y = maxy - j*pixel_size;
 
-      pixels[i+pixel_count_x*j] = Mandelbrot(x,y);
+      if (Mandelbrot(x,y)) {
+      	pixels_rgb[3*(i+pixel_count_x*j)+0] = 0;
+      	pixels_rgb[3*(i+pixel_count_x*j)+1] = 0;
+      	pixels_rgb[3*(i+pixel_count_x*j)+2] = 0;
+      }
+      else {
+      	pixels_rgb[3*(i+pixel_count_x*j)+0] = 255;
+      	pixels_rgb[3*(i+pixel_count_x*j)+1] = 255;
+      	pixels_rgb[3*(i+pixel_count_x*j)+2] = 255;
+      }
 
     }
   }	
 
+  cout << "Done with computation" << endl;
+
   ofstream myfile;
   unsigned char test_array [] = {10, 10, 10, 20, 20, 20};
   write_to_p6((char *) "test.ppm",2,1,test_array);
+
+  write_to_p6((char *) "fractal.ppm",pixel_count_x,pixel_count_y,pixels_rgb);
+
   return 0;
 
 }
