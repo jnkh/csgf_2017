@@ -188,18 +188,10 @@ void downsample_pixels(rgb_color* pixels_hr,rgb_color* pixels_lr,int fac,int pix
 
 }
 
-
-int main () {
-
+void save_mb_image(double center_x,double center_y, double length_x,double length_y,int pixel_count_raw,int super_res,int idx) {
 	
-	int super_res = 5;
-	int pixel_count_raw = 1000;
   int pixel_count_x = super_res*pixel_count_raw;
 
-  double center_x = -.74364386269; //-0.75
-  double center_y = 0.13182590271;//0.00
-  double length_x = 0.00000013526; //2.75
-  double length_y = 0.00000013526; //2.0
 
 
   double pixel_size = length_x / pixel_count_x;
@@ -234,11 +226,35 @@ int main () {
   }	
 	}
 	downsample_pixels(pixels,out_pixels,super_res,pixel_count_x,pixel_count_y);
-  write_to_p6((char *) "out.ppm",pixel_count_x/super_res,pixel_count_y/super_res, (unsigned char *) out_pixels);
+	char filename_ [20];
+	sprintf(filename_, "out%03d.ppm",idx);
+  write_to_p6((char *) filename_,pixel_count_x/super_res,pixel_count_y/super_res, (unsigned char *) out_pixels);
 	free(pixels);
 	free(out_pixels);
   //unsigned char test_array [] = {10, 10, 10, 20, 20, 20};
   //write_to_p6((char *) "test.ppm",2,1,test_array);
+
+
+
+
+}
+
+
+
+int main () {
+
+	int super_res = 5;
+	int pixel_count_raw = 1000;
+  double center_x = -.74364386269; //-0.75
+  double center_y = 0.13182590271;//0.00
+  double length_x = 0.00000013526; //2.75
+  double length_y = 0.00000013526; //2.0
+
+	for (int i = 0; i < 100; i++) {
+		length_x *= 0.95;
+		length_y *= 0.95;
+		save_mb_image(center_x, center_y,  length_x, length_y, pixel_count_raw, super_res,i);
+	}	
 
   return 0;
 
