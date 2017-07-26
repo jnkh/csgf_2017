@@ -1,5 +1,5 @@
 all:
-	pgc++ -g -O0 mb.cc -o mb
+	pgc++ -g -acc -O2 mb.cc -o mb
 
 clean:
 	${RM} mb
