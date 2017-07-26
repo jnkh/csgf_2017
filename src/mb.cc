@@ -6,6 +6,7 @@
 #include <math.h>
 #include <cmath>
 #include <complex>
+#include <assert.h>
 using namespace std;
 
 /*takes an array of row major, contiguous rbg values as unsigned char (0-255) and writes them
@@ -25,9 +26,9 @@ void write_to_p6(char* filename,int dim_x, int dim_y, unsigned char data []) {
 
 
 struct hsv_color {
-	float h;
-	float s;
-	float v;
+	double h;
+	double s;
+	double v;
 };
 
 struct rgb_color {
@@ -36,13 +37,13 @@ struct rgb_color {
 	unsigned char b;
 };
 
-rgb_color hsv_to_rgb(float h, float s, float v) {
+rgb_color hsv_to_rgb(double h, double s, double v) {
 	h = 360*h;
 	
-	float c = v*s;
-	float hp = h/60;
-	float x = c*(1 - fabs(fmod(hp,2.0)-1));
-	float r,g,b;
+	double c = v*s;
+	double hp = h/60;
+	double x = c*(1 - fabs(fmod(hp,2.0)-1));
+	double r,g,b;
 	rgb_color rgb;
 	if (0 <= hp && hp < 1) {r = c; g = x; b = 0;}
 	if (1 <= hp && hp < 2) {r = x; g = c; b = 0;}
@@ -50,7 +51,7 @@ rgb_color hsv_to_rgb(float h, float s, float v) {
 	if (3 <= hp && hp < 4) {r = 0; g = x; b = c;}
 	if (4 <= hp && hp < 5) {r = x; g = 0; b = c;}
 	if (5 <= hp && hp <= 6) {r = c; g = 0; b = x;}
-	float m = v-c;
+	double m = v-c;
 	r += m;
 	g += m;
 	b += m;
@@ -60,10 +61,10 @@ rgb_color hsv_to_rgb(float h, float s, float v) {
 	return rgb;
 }
 
-rgb_color get_color(float distance,int iter,int iter_max, float pixel_size, float radius, float radius_max) {
+rgb_color get_color(double distance,int iter,int iter_max, double pixel_size, double radius, double radius_max) {
 	rgb_color ret;
-	float hue,val;
-	float sat = 0.7;
+	double hue,val;
+	double sat = 0.7;
 	if (iter >= iter_max) {
 		ret.r = 255; ret.g = 255; ret.b = 255	;
 		return ret;
@@ -73,7 +74,7 @@ rgb_color get_color(float distance,int iter,int iter_max, float pixel_size, floa
 	}	else {
 		val = 1.0;
 	}	
-	float iter_cont = iter - log2(log(radius)/log(radius_max));
+	double iter_cont = iter - log2(log(radius)/log(radius_max));
 	hue = log(iter_cont)/log(iter_max);
 	hue = hue*10;
 	hue = hue - floor(hue);
@@ -81,29 +82,29 @@ rgb_color get_color(float distance,int iter,int iter_max, float pixel_size, floa
 }
 
 
-float mult_complex_re(float x1,float y1,float x2, float y2) { return x1*x2 - y1*y2;}
-float mult_complex_im(float x1,float y1,float x2, float y2) { return x1*y2 + y1*x2;}
+double mult_complex_re(double x1,double y1,double x2, double y2) { return x1*x2 - y1*y2;}
+double mult_complex_im(double x1,double y1,double x2, double y2) { return x1*y2 + y1*x2;}
 
-float square_complex_re(float x,float y) { return x*x - y*y;}
-float square_complex_im(float x,float y) { return 2*x*y;}
-float abs_complex(float x,float y) {return pow(x*x + y*y,0.5);}
+double square_complex_re(double x,double y) { return x*x - y*y;}
+double square_complex_im(double x,double y) { return 2*x*y;}
+double abs_complex(double x,double y) {return pow(x*x + y*y,0.5);}
 
 
-rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
+rgb_color Mandelbrot(double x0, double y0,double pixel_size) {
 
   int iter = 0;
   int iter_max = 10000;
-  float radius_max = 1.0* ( 1 << 18);
+  double radius_max = 1.0* ( 1 << 18);
 
-  float radius = 0.0;
-  float x = 0.0;
-  float x_tmp = 0.0;
-  float dx_tmp = 0.0;
-  float y = 0.0;
-	//complex<float> z (0.0,0.0);
-	//complex<float> c  (x0,y0);//x0 + std::complex::complex_literals::i*y0;
-  float dx = 0.0;
-  float dy = 0.0;
+  double radius = 0.0;
+  double x = 0.0;
+  double x_tmp = 0.0;
+  double dx_tmp = 0.0;
+  double y = 0.0;
+	//complex<double> z (0.0,0.0);
+	//complex<double> c  (x0,y0);//x0 + std::complex::complex_literals::i*y0;
+  double dx = 0.0;
+  double dy = 0.0;
 
   
   while (radius < radius_max && iter < iter_max) {
@@ -125,47 +126,100 @@ rgb_color Mandelbrot(float x0, float y0,float pixel_size) {
 	//if (iter < iter_max) {ret.r = 255;ret.g = 255;ret.b = 255;}
 	//else {ret.r = 0;ret.g = 0;ret.b = 0;}
 	
-	float distance = 2*log(radius)*radius/abs_complex(dx,dy);
+	double distance = 2*log(radius)*radius/abs_complex(dx,dy);
 	return get_color(distance,iter,iter_max,pixel_size,radius,radius_max);
+}
+
+void downsample_pixels(rgb_color* pixels_hr,rgb_color* pixels_lr,int fac,int pixel_count_x,int pixel_count_y) {
+	int accum_r = 0;
+	int accum_g = 0;
+	int accum_b = 0;
+	int pixel_hr_x;
+	int pixel_hr_y;
+	rgb_color col;
+	rgb_color ret;
+		
+  for (int pixel_y=0; pixel_y<pixel_count_y/fac; pixel_y++) {
+		//#pragma acc parallel
+    for (int pixel_x=0; pixel_x<pixel_count_x/fac; pixel_x++) {
+			accum_r= 0;
+			accum_g= 0;
+			accum_b= 0;
+			for (int j =0; j < fac; j++) {
+				for (int i=0; i < fac; i++) {
+					pixel_hr_y = fac*pixel_y+j;
+					pixel_hr_x = fac*pixel_x+j;
+					col = pixels_hr[pixel_hr_y*pixel_count_x+pixel_hr_x];
+					accum_r += col.r;
+					accum_g += col.g;
+					accum_b += col.b;
+				}
+			}	
+			accum_r /= fac*fac;
+			accum_g /= fac*fac;
+			accum_b /= fac*fac;
+			assert(accum_r <= 255);
+			assert(accum_r <= 255);
+			assert(accum_r <= 255);
+			ret.r = (unsigned char) accum_r;
+			ret.g = (unsigned char) accum_g;
+			ret.b = (unsigned char) accum_b;
+
+      pixels_lr[pixel_y*pixel_count_x/fac+pixel_x] = ret;
+		}
+	}
+
 }
 
 
 int main () {
 
-  int pixel_count_x = 1000;
+	
+	int super_res = 5;
+	int pixel_count_raw = 200;
+  int pixel_count_x = super_res*pixel_count_raw;
 
-  float center_x = -0.75;
-  float center_y = 0.00;
-  float length_x = 2.75;
-  float length_y = 2.0;
+  double center_x = -.74364386269; //-0.75
+  double center_y = 0.13182590271;//0.00
+  double length_x = 0.00000013526; //2.75
+  double length_y = 0.00000013526; //2.0
 
 
-  float pixel_size = length_x / pixel_count_x;
+  double pixel_size = length_x / pixel_count_x;
 	int pixel_count_y = floor(length_y/pixel_size);
  	length_y = pixel_count_y*pixel_size;
 
-  float minx = center_x - length_x/2.0;
-  float maxy = center_y + length_y/2.0; 
+  double minx = center_x - length_x/2.0;
+  double maxy = center_y + length_y/2.0; 
   
 
   rgb_color * pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y );
+  rgb_color * out_pixels = (rgb_color *) malloc( sizeof(rgb_color)*pixel_count_x*pixel_count_y/(super_res*super_res));
 
+	int buffer_size = pixel_count_x*pixel_count_y;
+	#pragma acc data copyout(pixels[0:buffer_size])
+	#pragma acc parallel
+	{
+	#pragma acc loop independent
   for (int pixel_y=0; pixel_y<pixel_count_y; pixel_y++) {
 		//#pragma acc parallel
+		#pragma acc loop independent
     for (int pixel_x=0; pixel_x<pixel_count_x; pixel_x++) {
 
-      float x = minx + pixel_x*pixel_size;
-      float y = maxy - pixel_y*pixel_size;
+      double x = minx + pixel_x*pixel_size;
+      double y = maxy - pixel_y*pixel_size;
 
-			//float x = minx + i*pixel_size;
-      //float y = maxy - j*pixel_size;
+			//double x = minx + i*pixel_size;
+      //double y = maxy - j*pixel_size;
 
       pixels[pixel_y*pixel_count_x+pixel_x] = Mandelbrot(x,y,pixel_size);
     }
   }	
-
-  write_to_p6((char *) "out.ppm",pixel_count_x,pixel_count_y, (unsigned char *) pixels);
+	}
+	downsample_pixels(pixels,out_pixels,super_res,pixel_count_x,pixel_count_y);
+  write_to_p6((char *) "out.ppm",pixel_count_x/super_res,pixel_count_y/super_res, (unsigned char *) out_pixels);
 	free(pixels);
+	free(out_pixels);
   //unsigned char test_array [] = {10, 10, 10, 20, 20, 20};
   //write_to_p6((char *) "test.ppm",2,1,test_array);
   return 0;
